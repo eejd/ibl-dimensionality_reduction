@@ -84,6 +84,7 @@ def bin_types(spikes, trials, wheel):
     start = max([x for x in [times1[0], times2[0], times3[0], times4[0], times5[0]]])
     stop = min([x for x in [times1[-1], times2[-1],
                             times3[-1], times4[-1], times5[-1]]])
+
     time_points = np.linspace(start, stop, int((stop - start) / T_BIN))
     
     # either find nearest or interpolate in order to bin 
@@ -99,30 +100,29 @@ def bin_types(spikes, trials, wheel):
     binned_data['trial_start_event'] = R3[0, find_nearest(
         times3, start):find_nearest(times3, stop)]
 
-    # Matt: check start time such that trial number is correct
-    # get trial number for each time bin
-    BinIdx = T_BIN * np.arange(len(binned_data['summed_spike_amps'][0]))
-    binned_data['trial_number'] = np.digitize(BinIdx,trials['goCue_times'])
-    # weird thing:    
-    print('There are %s trials binned.' %np.unique(binned_data['trial_number'][-1]))
-
+    # get trial number for each time bin   
+    binned_data['trial_number'] = np.digitize(time_points,trials['goCue_times'])
+    print('Range of trials: ',[binned_data['trial_number'][0],binned_data['trial_number'][-1]])
     return binned_data
 
 
 def color_attractor(binned_data, trial_number):
 
-    
-    # obs_limit=1000 #else it's too slow  ​
-    low, high = bounds
+    # Find first and last bin index for given trial   
+    a = list(binned_data['trial_number']) 
+    first = a.index(trial_number)
+    last  = len(a) - 1 - a[::-1].index(1)
 
-    X = binned_data['summed_spike_amps'][:, low:high].T
+    # load neural dataand reduce dimensions
+    X = binned_data['summed_spike_amps'][:, first:last].T
     Y = manifold.Isomap(n_components=3).fit_transform(X)
 
+    # color it with some other experimental parameter
     x, y, z = np.split(Y, 3, axis=1)
     fig = plt.figure()
     ax = Axes3D(fig)
     p = ax.scatter(x, y, z, s=20, alpha=0.25, c=abs(
-        binned_data['wheel_velocity'][low:high]), cmap='binary')
+        binned_data['wheel_velocity'][first:last]), cmap='binary')
     fig.colorbar(p)
     plt.title("Guido's motor cortex --> thalamus recording vs wheel speed")
     # plt.scatter(Y.T[0,:],Y.T[1,:],s=1,alpha=0.9,c=D_trial['wheel_velocity'][trial])
