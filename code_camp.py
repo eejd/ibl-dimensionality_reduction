@@ -12,17 +12,20 @@ from brainbox.processing import bincount2D
 import matplotlib.pyplot as plt
 import ibllib.plots as iblplt
 # define the path to the sessions we downloaded 
+
+
+
 main_path = Path('/home/mic/drive_codecamp/')
 SES = {
     'A': main_path.joinpath(Path('ZM_1735/2019-08-01/001')), # RSC --> CA1 --> midbrain, good behavior, bad recroding
-    'B': main_path.joinpath(Path('ibl_witten_04/2019-08-04/002')), # visual cortex, good behavior, noisy recording
+    'B': main_path.joinpath(Path('ibl_witten_04/2018-08-11/001')), # visual cortex, good behavior, noisy recording
     'C': main_path.joinpath(Path('ZM_1736/2019-08-09/004')),  # left probe, bad behavior, good recording
     'D': main_path.joinpath(Path('ibl_witten_04/2019-08-04/001')), # motor cortex, bad beahvior, good recording
     'E': main_path.joinpath(Path('KS005/2019-08-29/001')), # activity in in red nucleaus, bad recording (serious lick artifacts and some units saturated) 
 #    'F': main_path.joinpath(Path('KS005/2019-08-30/001')), # too large, didnt download for now
 }
 # select a session from the bunch
-sid = 'A'
+sid = 'B'
 ses_path = Path(SES[sid])
 # read in the alf objects
 alf_path = ses_path / 'alf'
@@ -62,7 +65,8 @@ def bin_types(spikes, trials, wheel):
     trial_start_times = trials['intervals'][:, 0]
     # trial_end_times = trials['intervals'][:, 1] #not working as there are
     # nans
-    # compute raster map as a function of cluster number
+
+    # Load in different things
     R1, times1, _ = bincount2D(
         spikes['times'], spikes['clusters'], T_BIN, weights=spikes['amps'])
     R2, times2, _ = bincount2D(
@@ -75,11 +79,14 @@ def bin_types(spikes, trials, wheel):
         [0] * len(wheel['times'])), T_BIN, weights=wheel['position'])
     R5, times5, _ = bincount2D(wheel['times'], np.array(
         [0] * len(wheel['times'])), T_BIN, weights=wheel['velocity'])
+
     #R6, times6, _ = bincount2D(trial_end_times, np.array([0]*len(trial_end_times)), T_BIN)
     start = max([x for x in [times1[0], times2[0], times3[0], times4[0], times5[0]]])
     stop = min([x for x in [times1[-1], times2[-1],
                             times3[-1], times4[-1], times5[-1]]])
     time_points = np.linspace(start, stop, int((stop - start) / T_BIN))
+    
+    # either find nearest or interpolate in order to bin 
     binned_data = {}
     binned_data['wheel_position'] = np.interp(
         time_points, wheel['times'], wheel['position'])
@@ -92,18 +99,19 @@ def bin_types(spikes, trials, wheel):
     binned_data['trial_start_event'] = R3[0, find_nearest(
         times3, start):find_nearest(times3, stop)]
 
-
+    # Matt: check start time such that trial number is correct
     # get trial number for each time bin
     BinIdx = T_BIN * np.arange(len(binned_data['summed_spike_amps'][0]))
     binned_data['trial_number'] = np.digitize(BinIdx,trials['goCue_times'])
+    # weird thing:    
+    print('There are %s trials binned.' %np.unique(binned_data['trial_number'][-1]))
 
-    
     return binned_data
 
 
+def color_attractor(binned_data, trial_number):
 
-def color_attractor(binned_data, bounds):
-
+    
     # obs_limit=1000 #else it's too slow  ​
     low, high = bounds
 
