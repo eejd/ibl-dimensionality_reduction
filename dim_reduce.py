@@ -12,6 +12,7 @@ from mpl_toolkits.mplot3d import Axes3D
 # imports from ibllib
 from brainbox.processing import bincount2D
 
+
 def bin_types(spikes, trials, wheel):
 
     T_BIN = 0.01  # [sec]
@@ -43,8 +44,8 @@ def bin_types(spikes, trials, wheel):
                             times3[-1], times4[-1], times5[-1]]])
 
     time_points = np.linspace(start, stop, int((stop - start) / T_BIN))
-    
-    # either find nearest or interpolate in order to bin 
+
+    # either find nearest or interpolate in order to bin
     binned_data = {}
     binned_data['wheel_position'] = np.interp(
         time_points, wheel['times'], wheel['position'])
@@ -57,20 +58,22 @@ def bin_types(spikes, trials, wheel):
     binned_data['trial_start_event'] = R3[0, find_nearest(
         times3, start):find_nearest(times3, stop)]
 
-    # get trial number for each time bin   
-    binned_data['trial_number'] = np.digitize(time_points,trials['goCue_times'])
-    print('Range of trials: ',[binned_data['trial_number'][0],binned_data['trial_number'][-1]])
+    # get trial number for each time bin
+    binned_data['trial_number'] = np.digitize(time_points, trials['goCue_times'])
+    print('Range of trials: ', [binned_data['trial_number'][0], binned_data['trial_number'][-1]])
     return binned_data
+
 
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return idx
 
+
 def color_attractor(binned_data, projection, trial_number):
 
-    # Find first and last bin index for given trial   
-    a = list(binned_data['trial_number']) 
+    # Find first and last bin index for given trial
+    a = list(binned_data['trial_number'])
     first = a.index(trial_number)
     last  = len(a) - 1 - a[::-1].index(1)
 
