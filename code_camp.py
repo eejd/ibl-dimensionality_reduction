@@ -20,9 +20,7 @@ import alf.io
 import ibllib.plots as iblplt
 
 # imports from dim_reduction work
-import dim_reduce.bin_types
-import dim_reduce.find_nearest
-import dim_reduce.color_attractor
+import dim_reduce
 
 main_path = Path('/home/mic/drive_codecamp/')
 SES = {
