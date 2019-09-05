@@ -12,10 +12,12 @@ from mpl_toolkits.mplot3d import Axes3D
 # imports from ibllib
 from brainbox.processing import bincount2D
 
+
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return idx
+
 
 def filliti(v):
     """
@@ -88,20 +90,22 @@ def bin_types(spikes, trials, wheel, t_bin):
     return binned_data
 
 
-def get_trial(binned_data, variable, trial_number):
-    # Find first and last bin index for given trial
-    a = list(binned_data['trial_number'])
-    first = a.index(trial_number)
-    last  = len(a) - 1 - a[::-1].index(1)
-    neural_data = binned_data['summed_spike_amps'][:, first:last].T
-    variable_data = binned_data[variable][first:last]
+def get_trials(binned_data, trial_variable, requested_trials):
+    # TODO: docstring
+    # TODO: bin_index appears to be slicing incorrectly
+    bin_index = np.where(np.isin(binned_data['trial_number'], requested_trials+1))
+    print(bin.index.shape)
+    neural_data = binned_data['summed_spike_amps'][:, bin_index].T
+    variable_data = binned_data[trial_variable][bin_index]
+    return neural_data, variable_data
 
 
-def color_3D_projection(projection, variable):
+def color_3D_projection(data_projection, trial_variable, color_map='jet'):
+    # TODO: docstring
     # color it with some other experimental parameter
-    x, y, z = np.split(projection, 3, axis=1)
+    x, y, z = np.split(data_projection, 3, axis=1)
     fig = plt.figure()
     ax = Axes3D(fig)
-    p = ax.scatter(x, y, z, s=20, alpha=0.25, c=abs(variable), cmap='binary')
+    p = ax.scatter(x, y, z, s=20, alpha=0.25, c=trial_variable, cmap=color_map)
     fig.colorbar(p)
     return p
