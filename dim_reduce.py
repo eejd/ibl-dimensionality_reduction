@@ -8,9 +8,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
+import pandas as pd
 # imports from ibllib
 from brainbox.processing import bincount2D
+
 
 def find_nearest(array, value):
     array = np.asarray(array)
@@ -23,6 +24,8 @@ def filliti(v):
     E.g All the bins within a trials hould have the same choice value
     v, param:  one-dimensional vector with trial variable only in the first bin
     of each trial
+    return v: returns vector size (n = number of bins) where the same value is
+    atributted to the same trial
     """
     for x in range(len(v[0])):
         if v[0,x]==0:
@@ -30,10 +33,19 @@ def filliti(v):
     return v 
 
 
-def bin_types(spikes, trials, wheel, t_bin):
+def bin_types(spikes, trials, wheel, t_bin, brain_area = None, *args, **kwargs):
     T_BIN = t_bin  # [sec]
-
+    
     # TO GET MEAN: bincount2D(..., weight=positions) / bincount2D(..., weight=None)
+    
+    #Get cluster ID for location of interest
+    if brain_area:
+        locations  =  clusters['brainAcronyms']
+        spikes =  pd.DataFrame.from_dict(spikes)
+        loc_idx =locations.loc[(locations['brainAcronyms'] == brain_area)].index
+        spikes = spikes[np.isin(spikes['clusters'],loc_idx)]
+        #spikes  =  spikes.to_dict()
+    
     reward_times = trials['feedback_times']
     trial_start_times = trials['intervals'][:, 0]
     # trial_end_times = trials['intervals'][:, 1] #not working as there are
