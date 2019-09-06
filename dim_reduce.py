@@ -92,9 +92,8 @@ def bin_types(spikes, trials, wheel, t_bin):
 
 def get_trials(binned_data, trial_variable, requested_trials):
     # TODO: docstring
-    # TODO: bin_index appears to be slicing incorrectly
-    bin_index = np.where(np.isin(binned_data['trial_number'], requested_trials+1))
-    print(bin.index.shape)
+    # TODO: neural and variable data should be bunches with names (for plotting)
+    bin_index = np.isin(binned_data['trial_number'], requested_trials+1)
     neural_data = binned_data['summed_spike_amps'][:, bin_index].T
     variable_data = binned_data[trial_variable][bin_index]
     return neural_data, variable_data
@@ -102,10 +101,11 @@ def get_trials(binned_data, trial_variable, requested_trials):
 
 def color_3D_projection(data_projection, trial_variable, color_map='jet'):
     # TODO: docstring
+    # TODO: should this be figure level or axes level
     # color it with some other experimental parameter
     x, y, z = np.split(data_projection, 3, axis=1)
     fig = plt.figure()
     ax = Axes3D(fig)
     p = ax.scatter(x, y, z, s=20, alpha=0.25, c=trial_variable, cmap=color_map)
     fig.colorbar(p)
-    return p
+    return ax
