@@ -2,14 +2,24 @@
 # Simple test of dPCA on IBL data
 #
 
+# system imports
 import sys
 from pathlib import Path
 
 sys.path.append('/Users/dep/Workspaces/dPCA/python')
 
+# core imports
+import matplotlib.pyplot as plt
+import numpy as np
+
+# ibl imports
+import alf.io
+from brainbox.processing import bincount2D
+import ibllib.plots as iblplt
+
+# external packages
 from dPCA import dPCA
 
-import alf.io
 
 #code_camp_data = Path('~/Workspaces/Rodent/IBL/code_camp/data/')
 code_camp_data = Path('/Users/dep/Workspaces/Rodent/IBL/code_camp/data/')
@@ -32,3 +42,10 @@ spikes = alf.io.load_object(alf_path, 'spikes')
 clusters = alf.io.load_object(alf_path, 'clusters')
 channels = alf.io.load_object(alf_path, 'channels')
 trials = alf.io.load_object(alf_path, '_ibl_trials')
+wheel = alf.io.load_object(alf_path, '_ibl_wheel')
+
+T_BIN = 0.1
+
+# compute raster map as a function of cluster number
+R, times, clusters = bincount2D(spikes['times']/30000, spikes['clusters'], T_BIN)
+

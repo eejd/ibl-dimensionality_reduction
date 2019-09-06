@@ -1,5 +1,11 @@
 # we need to cross validate all the methods
 
+import sys
+# sys.path.append(r'C:\Leenoy\Postdoc 1st year\IBL\Code_camp_September_2019\data_code_camp\dim_red_WG\umap-master')
+sys.path.append('/Users/dep/Workspaces/Rodent/IBL/ibllib')
+sys.path.append('/Users/dep/Workspaces/Rodent/IBL/code_camp/ibl-dimensionality_reduction/')
+
+
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,9 +17,7 @@ from sklearn.manifold import Isomap, MDS, TSNE, LocallyLinearEmbedding
 from sklearn.decomposition import PCA, FactorAnalysis
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
-import sys
-sys.path.append(r'C:\Leenoy\Postdoc 1st year\IBL\Code_camp_September_2019\data_code_camp\dim_red_WG\umap-master')
-import umap
+# import umap
 from sklearn.datasets import fetch_openml
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -22,8 +26,11 @@ import alf.io
 from brainbox.processing import bincount2D
 import ibllib.plots as iblplt
 
+import dim_reduce
+
 # define the path to the sessions we downloaded 
-main_path = Path(r'C:\Leenoy\Postdoc 1st year\IBL\Code_camp_September_2019\data_code_camp')
+# main_path = Path(r'C:\Leenoy\Postdoc 1st year\IBL\Code_camp_September_2019\data_code_camp')
+main_path = Path('/Users/dep/Workspaces/Rodent/IBL/code_camp/data/')
 SES = {
     'A': main_path.joinpath(Path('ZM_1735/2019-08-01/001')), # RSC --> CA1 --> midbrain, good behavior, bad recroding
     'B': main_path.joinpath(Path('ibl_witten_04_002/2019-08-04/002')), # visual cortex, good behavior, noisy recording
@@ -49,7 +56,7 @@ wheel = alf.io.load_object(alf_path, '_ibl_wheel')
 T_BIN = 0.1
 
 # compute raster map as a function of cluster number
-R, times, clusters = bincount2D(spikes['times']/30000, spikes['clusters'], T_BIN)
+# R, times, clusters = bincount2D(spikes['times']/30000, spikes['clusters'], T_BIN)
 
 ## plot raster map
 #plt.imshow(R, aspect='auto', cmap='binary', vmax=T_BIN / 0.001 / 4,
@@ -67,81 +74,6 @@ R, times, clusters = bincount2D(spikes['times']/30000, spikes['clusters'], T_BIN
 ### Playing with Isomap, PCA, TSNE, UMAP 
 plt.ion()
 T_BIN = 0.01
-
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return idx
-
-def filliti(v):
-    """
-    Fill values in between trials with common variable of trial. 
-    E.g All the bins within a trials hould have the same choice value
-    v, param:  one-dimensional vector with trial variable only in the first bin
-    of each trial
-    """
-    for x in range(len(v[0])):
-        if v[0,x]==0:
-            v[0,x] = v[0,x-1]
-    return v 
-
-
-def bin_types(spikes, trials, wheel, t_bin):
-    T_BIN = t_bin  # [sec]
-
-    # TO GET MEAN: bincount2D(..., weight=positions) / bincount2D(..., weight=None)
-    reward_times = trials['feedback_times']
-    trial_start_times = trials['intervals'][:, 0]
-    # trial_end_times = trials['intervals'][:, 1] #not working as there are
-    # nans
-    # compute raster map as a function of cluster number
-    # Load in different things
-    R1, times1, _ = bincount2D(
-        spikes['times'], spikes['clusters'], T_BIN, weights=spikes['amps'])
-    R2, times2, _ = bincount2D(
-        reward_times, np.array(
-            [0] * len(reward_times)), T_BIN)
-    R3, times3, _ = bincount2D(
-        trial_start_times, np.array(
-            [0] * len(trial_start_times)), T_BIN)
-    R4, times4, _ = bincount2D(wheel['times'], np.array(
-        [0] * len(wheel['times'])), T_BIN, weights=wheel['position'])
-    R5, times5, _ = bincount2D(wheel['times'], np.array(
-        [0] * len(wheel['times'])), T_BIN, weights=wheel['velocity'])
-
-    #Add choice
-    R6, times6, _ = bincount2D(trials['goCue_times'],trials['choice'], T_BIN)
-    # Flatten choice -1 Left, 1  Right
-    R6 = np.sum(R6*np.array([[-1], [1]]),axis=0)
-    R6 = np.expand_dims(R6, axis=0)
-    # Fill 0 between trials with choice outcome of trial
-    R6 =  filliti(R6)
-    R6[R6==-1]=0
-    #Add reward
-    R7, times7, _ = bincount2D(trials['goCue_times'],trials['feedbackType'], T_BIN)
-    # Flatten reward -1 error, 1  reward
-    R7 = np.sum(R7*np.array([[-1], [1]]),axis=0)
-    R7 = np.expand_dims(R7, axis=0)
-    # Fill 0 between trials with reward outcome of trial
-    R7 =  filliti(R7)
-    R7[R7==-1]=0
-
-    start = max([x for x in [times1[0], times3[0], times4[0], times5[0],times6[0], times7[0]]])
-    stop = min([x for x in [times1[-1], times2[-1],
-                            times3[-1], times4[-1], times5[-1], times6[-1], times7[-1]]])
-    time_points = np.linspace(start, stop, int((stop - start) / T_BIN))
-    binned_data = {}
-    binned_data['wheel_position'] = np.interp(time_points, wheel['times'], wheel['position'])
-    binned_data['wheel_velocity'] = np.interp(time_points, wheel['times'], wheel['velocity'])
-    binned_data['summed_spike_amps'] = R1[:, find_nearest(times1, start):find_nearest(times1, stop)]
-    binned_data['reward_event'] = R2[0, find_nearest(times2, start):find_nearest(times2, stop)]
-    binned_data['trial_start_event'] = R3[0, find_nearest(times3, start):find_nearest(times3, stop)]
-    binned_data['choice'] = R6[0, find_nearest(times6, start):find_nearest(times6, stop)]
-    binned_data['reward'] = R7[0, find_nearest(
-        times7, start):find_nearest(times7, stop)]
-    binned_data['trial_number'] = np.digitize(time_points,trials['goCue_times'])
-    print('Range of trials: ',[binned_data['trial_number'][0],binned_data['trial_number'][-1]])
-    return binned_data
 
 def Isomap_colored(binned_data, trial_range, n_comps, n_neigh, behav_var):
     # trial_range is an array of two numbers defining the range of concatenated trials
@@ -342,7 +274,7 @@ def LDA_colored(binned_data, n_comps, bounds):
 
 
 # lets run and plot 
-binned_data = bin_types(spikes, trials, wheel, 0.2)
+binned_data = dim_reduce.bin_types(spikes, trials, wheel, 0.2)
 # binned_data.keys()
 
 # behav_var takes the following options: 'choice'/ 'reward'/ 'wheel_velocity'/ 'wheel_position'
