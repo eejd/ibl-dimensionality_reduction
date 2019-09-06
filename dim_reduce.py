@@ -34,7 +34,7 @@ def filliti(v):
     return v 
 
 
-def bin_types(spikes, trials, wheel, t_bin, brain_area = None, *args, **kwargs):
+def bin_types(spikes, trials, wheel, t_bin, clusters, brain_area = None, *args, **kwargs):
     T_BIN = t_bin  # [sec]
     
     # TO GET MEAN: bincount2D(..., weight=positions) / bincount2D(..., weight=None)
