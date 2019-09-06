@@ -106,7 +106,6 @@ def bin_types(spikes, trials, wheel, t_bin, clusters, brain_area = None, *args, 
 
 def get_trials(binned_data, trial_variable, requested_trials):
     # TODO: docstring
-    #requested trials list(range(#))
     # TODO: neural and variable data should be bunches with names (for plotting)
     bin_index = np.isin(binned_data['trial_number'], requested_trials + [1])
     neural_data = binned_data['summed_spike_amps'][:, bin_index].T
