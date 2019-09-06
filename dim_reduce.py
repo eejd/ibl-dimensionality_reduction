@@ -92,19 +92,23 @@ def bin_types(spikes, trials, wheel, t_bin, clusters, brain_area = None, *args, 
     binned_data['wheel_velocity'] = np.interp(time_points, wheel['times'], wheel['velocity'])
     binned_data['summed_spike_amps'] = R1[:, find_nearest(times1, start):find_nearest(times1, stop)]
     binned_data['reward_event'] = R2[0, find_nearest(times2, start):find_nearest(times2, stop)]
-    binned_data['trial_start_event'] = R3[0, find_nearest(times3, start):find_nearest(times3, stop)]
-    binned_data['choice'] = R6[0, find_nearest(times6, start):find_nearest(times6, stop)]
+    binned_data['trial_start_event'] = R3[0, find_nearest(times3, start):find_nearest(times3, stop)-1]
+    binned_data['choice'] = R6[0, find_nearest(times6, start):find_nearest(times6, stop)-1]
     binned_data['reward'] = R7[0, find_nearest(
-        times7, start):find_nearest(times7, stop)]
+        times7, start):find_nearest(times7, stop)-1]
     binned_data['trial_number'] = np.digitize(time_points,trials['goCue_times'])
     print('Range of trials: ',[binned_data['trial_number'][0],binned_data['trial_number'][-1]])
+    
+    
+    
     return binned_data
 
 
 def get_trials(binned_data, trial_variable, requested_trials):
     # TODO: docstring
+    #requested trials list(range(#))
     # TODO: neural and variable data should be bunches with names (for plotting)
-    bin_index = np.isin(binned_data['trial_number'], requested_trials+1)
+    bin_index = np.isin(binned_data['trial_number'], requested_trials + [1])
     neural_data = binned_data['summed_spike_amps'][:, bin_index].T
     variable_data = binned_data[trial_variable][bin_index]
     return neural_data, variable_data
